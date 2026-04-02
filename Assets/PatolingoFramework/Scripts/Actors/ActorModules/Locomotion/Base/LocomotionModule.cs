@@ -13,9 +13,9 @@ public abstract class LocomotionModule : BlockableMonoBehaviour, ILocomotion, IT
 
 
     private float _currentMovementSpeed;
-    public float TargetSpeed => _isSprinting ? movementSpeed * sprintMultiplier : movementSpeed;
+    public float TargetSpeed => GetTargetSpeed();
 
-    private bool _isSprinting;
+    protected bool _isSprinting;
 
     protected Vector3 MoveDirection;
     protected Vector3 Velocity;
@@ -60,6 +60,16 @@ public abstract class LocomotionModule : BlockableMonoBehaviour, ILocomotion, IT
         {
             Velocity = Velocity.normalized * maxSpeed;
         }
+    }
+
+    protected virtual float GetTargetSpeed()
+    {
+        float baseSpeed = movementSpeed;
+        if (_isSprinting)
+        {
+            baseSpeed *= sprintMultiplier;
+        }
+        return baseSpeed;
     }
 }
 

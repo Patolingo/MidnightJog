@@ -7651,7 +7651,7 @@ GameObject:
   - component: {fileID: 2067074244}
   - component: {fileID: 2067074243}
   - component: {fileID: 2067074242}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Stairs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9545,22 +9545,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1323863239867147495, guid: 9ab55348f780d884cb91672da8ea20f0, type: 3}
-      propertyPath: maxSpeed
-      value: 15
-      objectReference: {fileID: 0}
-    - target: {fileID: 1323863239867147495, guid: 9ab55348f780d884cb91672da8ea20f0, type: 3}
-      propertyPath: acceleration
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 1323863239867147495, guid: 9ab55348f780d884cb91672da8ea20f0, type: 3}
-      propertyPath: deceleration
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 1323863239867147495, guid: 9ab55348f780d884cb91672da8ea20f0, type: 3}
-      propertyPath: sprintMultiplier
-      value: 5
-      objectReference: {fileID: 0}
     - target: {fileID: 2659058390714823757, guid: 9ab55348f780d884cb91672da8ea20f0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.591

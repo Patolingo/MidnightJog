@@ -1,3 +1,4 @@
+﻿using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -7,12 +8,17 @@ public class KinematicLocomotion : LocomotionModule
 
     [SerializeField] private float groundCheckDistance;
     [SerializeField] private LayerMask groundLayer;
+    [Space]
+    [SerializeField] private float stairsSpeed;
+    [SerializeField] private LayerMask stairsLayer;
 
     private Vector3 slopeHitPoint;
     private Vector3 slopeProjection;
     private float slopeAngle;
 
     private float _verticalVelocity;
+
+    private bool isOnStairs;
 
     private CharacterController _controller;
 
@@ -27,32 +33,74 @@ public class KinematicLocomotion : LocomotionModule
 
         CheckDownSlope();
 
-        if (_controller.isGrounded)
+        Vector3 finalVelocity = Velocity;
+
+        float extraSnap = _isSprinting ? 0.2f : 0f;
+        
+        bool hasGroundBelow = Physics.Raycast(
+            transform.position + Vector3.down + Vector3.up * 0.2f,
+            Vector3.down,
+            out RaycastHit hit,
+            _controller.stepOffset + 0.3f + extraSnap,
+            groundLayer
+        );
+
+        isOnStairs = Physics.Raycast(
+            transform.position + Vector3.down + Vector3.up * 0.2f,
+            Vector3.down,
+            out RaycastHit stairsHit,
+            _controller.stepOffset + 0.3f + extraSnap + 1,
+            stairsLayer
+        );
+
+
+        bool isGroundedStable = _controller.isGrounded || hasGroundBelow;
+
+
+
+        if (isGroundedStable)
         {
-            _verticalVelocity = -2f;
+            if (_verticalVelocity < 0f)
+                _verticalVelocity = -2f;
         }
         else
         {
             _verticalVelocity += gravity * deltaTime;
         }
 
-        if(slopeAngle > 0f && slopeAngle <= _controller.slopeLimit && _controller.isGrounded)
+        if (slopeAngle > 0f && slopeAngle <= _controller.slopeLimit && isGroundedStable)
         {
-            Velocity = slopeProjection.normalized * Velocity.magnitude;
-
-        }
-        else
-        {
-            Velocity.y += _verticalVelocity;
+            finalVelocity = slopeProjection.normalized * finalVelocity.magnitude;
         }
 
+        finalVelocity.y = _verticalVelocity;
 
-        _controller.Move(Velocity * deltaTime);
+        if (hasGroundBelow && _verticalVelocity <= 0f)
+        {
+            float distance = hit.distance;
+
+            if (distance > 0.05f && distance <= _controller.stepOffset + 0.2f + extraSnap)
+            {
+                float snapForce = distance / deltaTime;
+                finalVelocity.y = -snapForce;
+            }
+        }
+
+
+        int steps = Mathf.CeilToInt(finalVelocity.magnitude * deltaTime / 0.2f);
+        steps = Mathf.Clamp(steps, 1, 5);
+
+        Vector3 stepMove = (finalVelocity * deltaTime) / steps;
+
+        for (int i = 0; i < steps; i++)
+        {
+            _controller.Move(stepMove);
+        }
     }
 
     private void CheckDownSlope()
     {
-        Debug.DrawRay(transform.position, Vector3.down * groundCheckDistance, Color.red, 1f);
+       // Debug.DrawRay(transform.position, Vector3.down * groundCheckDistance, Color.red, 1f);
 
         if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, groundCheckDistance, groundLayer))
         {
@@ -73,17 +121,17 @@ public class KinematicLocomotion : LocomotionModule
         
     }
 
-    private void SnapToSlope()
+    protected override float GetTargetSpeed()
     {
-        if(!_controller.isGrounded && slopeAngle > 0f && slopeAngle <= _controller.slopeLimit)
-        {
-            Vector3 snapDirection = Vector3.down;
-            float snapDistance = groundCheckDistance;
-            if(Physics.Raycast(transform.position, snapDirection, out RaycastHit hit, snapDistance, groundLayer))
-            {
-                _controller.Move(Vector3.down * hit.distance);
-            }
-        }
-    }
+        float targetSpeed = base.GetTargetSpeed();
 
+        if(isOnStairs)
+        {
+            targetSpeed = stairsSpeed;
+        }
+
+        Debug.Log($"Target Speed: {targetSpeed}");
+
+        return targetSpeed;
+    }
 }
